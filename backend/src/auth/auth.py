@@ -4,7 +4,6 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
-
 AUTH0_DOMAIN = 'fsnd-ag.eu.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'CoffeAPI'
@@ -81,7 +80,7 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'Not authorized',
             'description': 'Permission not found'
-            }, 403)
+            }, 401)
     return True
     
 

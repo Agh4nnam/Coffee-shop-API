@@ -30,8 +30,7 @@ db_drop_and_create_all()
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['GET'])
-@requires_auth('get:drinks-detail')
-def get_drinks(self):
+def get_drinks():
     drinks = Drink.query.all()
     formatted_drinks = [drink.short() for drink in drinks]
     return jsonify({
@@ -56,6 +55,7 @@ def get_drinks(self):
 def get_drinks_detail(self):
     drinks = Drink.query.all()
     formatted_drinks = [drink.long() for drink in drinks]
+   
     return jsonify({
         'success':'true',
         'drinks': formatted_drinks
@@ -76,11 +76,14 @@ def get_drinks_detail(self):
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def add_drink(self):
-    data = request.get_json()
     
-    drink = Drink(recipe = json.dumps(data['recipe']), title = data['title'])
+    try:
+        data = request.get_json()
+        drink = Drink(recipe = json.dumps(data['recipe']), title = data['title'])
     #print(drink)
-    Drink.insert(drink)
+        Drink.insert(drink)
+    except:
+        abort(500)
     return jsonify({
         'success':True,
         'drinks': [drink.long()]
@@ -103,14 +106,12 @@ def update_drink(self, id):
     drink = Drink.query.filter(Drink.id == id).first()
     try:
         title = data['title']
-        recipe = json.dumps(data['recipe'])
     except:
         abort(400)
     if drink is None:
         abort(404)
     try:
         drink.title = title
-        drink.recipe = recipe
         Drink.update(drink)
     except:
         abort(500)
@@ -188,6 +189,14 @@ def not_found(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above 
 '''
+@app.errorhandler(AuthError)
+def auth_error(error):
+    return jsonify({
+        "success": False,
+        "error": error.status_code,
+        "message": error.error['description']
+    }), error.status_code
+
 @app.errorhandler(401)
 def unauthorized(error):
     return jsonify({
